@@ -5,6 +5,7 @@ import argparse
 import csv
 from multiprocessing.pool import ThreadPool
 import subprocess
+import re
 
 from deepspeech_pytorch.data.data_opts import add_data_opts
 from deepspeech_pytorch.data.utils import create_manifest
@@ -32,11 +33,13 @@ def convert_to_wav(csv_file, target_dir):
     os.makedirs(wav_dir, exist_ok=True)
     os.makedirs(txt_dir, exist_ok=True)
     path_to_data = os.path.dirname(csv_file)
+    regex = re.compile('[^a-zA-Z\s]')
 
     def process(x):
         file_path, text = x
         file_name = os.path.splitext(os.path.basename(file_path))[0]
-        text = text.strip().upper()
+        text = text.strip().upper().replace("-"," ")
+        text = regex.sub('', text)
         with open(os.path.join(txt_dir, file_name + '.txt'), 'w') as f:
             f.write(text)
         cmd = "sox {} -r {} -b 16 -c 1 {}".format(
